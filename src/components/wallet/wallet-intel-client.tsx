@@ -89,16 +89,39 @@ export function WalletIntelClient({ address }: Props) {
           <div>
             {portfolioError && (
               <div>
-                {portfolioError.message?.includes("429") || portfolioError.message?.includes("limit")
-                  ? "Daily API limit reached. Please try again tomorrow or upgrade your plan."
-                  : "Portfolio uplink is snoozing. Please retry in a few moments."}
+                {(() => {
+                  const msg = portfolioError.message?.toLowerCase() || "";
+                  if (msg.includes("429") || msg.includes("limit") || msg.includes("rate_limit")) {
+                    return "Daily API limit reached. Please try again tomorrow or upgrade your plan.";
+                  }
+                  if (msg.includes("504") || msg.includes("timeout")) {
+                    return "Moralis API request timed out. Please retry in a few moments.";
+                  }
+                  if (msg.includes("404") || msg.includes("not found")) {
+                    return "Portfolio endpoint not available. This wallet may not be supported.";
+                  }
+                  if (msg.includes("502") || msg.includes("unavailable")) {
+                    return "Moralis API temporarily unavailable. Please retry in a few moments.";
+                  }
+                  return portfolioError.message || "Portfolio uplink is snoozing. Please retry in a few moments.";
+                })()}
               </div>
             )}
             {swapsError && (
               <div>
-                {swapsError.message?.includes("429") || swapsError.message?.includes("limit")
-                  ? "Daily API limit reached. Please try again tomorrow or upgrade your plan."
-                  : "Swaps feed jammed. Moralis swaps service might be temporarily down—fallback transactions will kick in when possible."}
+                {(() => {
+                  const msg = swapsError.message?.toLowerCase() || "";
+                  if (msg.includes("429") || msg.includes("limit") || msg.includes("rate_limit")) {
+                    return "Daily API limit reached. Please try again tomorrow or upgrade your plan.";
+                  }
+                  if (msg.includes("504") || msg.includes("timeout")) {
+                    return "Moralis API request timed out. Please retry in a few moments.";
+                  }
+                  if (msg.includes("502") || msg.includes("unavailable")) {
+                    return "Swaps feed jammed. Moralis swaps service might be temporarily down—fallback transactions will kick in when possible.";
+                  }
+                  return swapsError.message || "Swaps feed jammed. Moralis swaps service might be temporarily down—fallback transactions will kick in when possible.";
+                })()}
               </div>
             )}
           </div>

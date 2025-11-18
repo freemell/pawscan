@@ -11,8 +11,8 @@ CLAWED`,
   `∧,,,∧
 ( ̳• · • ̳)
 /    づ♡  syncing...
-catnip and love
-use your pc please`,
+I'm pawsome and pawxy
+use your pc please :)`,
 ];
 
 export function AsciiCat() {

@@ -28,17 +28,36 @@ export async function GET(request: NextRequest) {
     return NextResponse.json(data);
   } catch (error: any) {
     console.error("Portfolio fetch failed", error);
-    const isRateLimit = error.message?.includes("RATE_LIMIT");
-    const is502 = error.message?.includes("MORALIS_502") || error.message?.includes("502");
+    const errorMsg = error.message || String(error);
+    const isRateLimit = errorMsg.includes("RATE_LIMIT");
+    const is502 = errorMsg.includes("MORALIS_502") || errorMsg.includes("502");
+    const isTimeout = errorMsg.includes("TIMEOUT") || errorMsg.includes("timeout");
+    const is404 = errorMsg.includes("404") || errorMsg.includes("not found");
+    const isMissingKey = errorMsg.includes("MORALIS_API_KEY") || errorMsg.includes("Missing");
+    
+    let status = 502;
+    let message = "Portfolio uplink unavailable. Please retry shortly.";
+    
+    if (isMissingKey) {
+      status = 500;
+      message = "Server configuration error. Please contact support.";
+    } else if (isRateLimit) {
+      status = 429;
+      message = errorMsg || "Daily API limit reached. Please try again tomorrow or upgrade your plan.";
+    } else if (isTimeout) {
+      status = 504;
+      message = "Moralis API request timed out. Please retry in a few moments.";
+    } else if (is404) {
+      status = 404;
+      message = "Portfolio endpoint not available. This wallet may not be supported.";
+    } else if (is502) {
+      status = 502;
+      message = "Moralis API temporarily unavailable. Please retry in a few moments.";
+    }
+    
     return NextResponse.json(
-      {
-        message: isRateLimit
-          ? error.message || "Daily API limit reached. Please try again tomorrow or upgrade your plan."
-          : is502
-            ? "Moralis API temporarily unavailable. Please retry in a few moments."
-            : "Portfolio uplink unavailable. Please retry shortly.",
-      },
-      { status: isRateLimit ? 429 : is502 ? 502 : 502 },
+      { message },
+      { status },
     );
   }
 }
