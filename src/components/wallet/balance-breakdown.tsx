@@ -86,7 +86,7 @@ export function BalanceBreakdown({ portfolio }: Props) {
             </div>
             <div>
               <div className="text-[var(--terminal-fg)]/70">{breakdown.lowValue}</div>
-              <div className="text-[var(--terminal-fg)]/60">Low (<$100)</div>
+              <div className="text-[var(--terminal-fg)]/60">Low (&lt;$100)</div>
             </div>
           </div>
         </div>
@@ -121,4 +121,3 @@ export function BalanceBreakdown({ portfolio }: Props) {
     </div>
   );
 }
-
