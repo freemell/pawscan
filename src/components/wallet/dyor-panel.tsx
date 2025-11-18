@@ -101,15 +101,9 @@ export function DyorPanel({ portfolio, swaps, tokenMeta, topHolders }: Props) {
                   }
                 }
                 
-                // Try to calculate from portfolio token price if available
-                if (tokenMeta.usdPrice && topToken) {
-                  const tokenAmount = Number(topToken.amount ?? 0);
-                  const tokenValue = Number(topToken.value_usd ?? 0);
-                  
-                  // If we have both value and amount, we can verify the price
-                  // But we still need supply to calculate market cap
-                  // Without supply, we can't calculate accurately
-                  return null;
+                // Fallback: show price if we have it but can't calculate market cap
+                if (tokenMeta.usdPrice) {
+                  return <div>Market Cap: Not available (Price: ${tokenMeta.usdPrice.toFixed(6)})</div>;
                 }
                 
                 return null;
