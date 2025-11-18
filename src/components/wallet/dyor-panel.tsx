@@ -101,9 +101,33 @@ export function DyorPanel({ portfolio, swaps, tokenMeta, topHolders }: Props) {
                   }
                 }
                 
-                // Fallback: show price if we have it but can't calculate market cap
+                // Calculate from portfolio token data: use amount and value to estimate supply
+                if (tokenMeta.usdPrice && topToken) {
+                  const tokenAmount = Number(topToken.amount ?? 0);
+                  const tokenValue = Number(topToken.value_usd ?? 0);
+                  
+                  // If we have both value and amount, we can calculate price per token
+                  // Then estimate supply from portfolio concentration if we have holder data
+                  if (tokenAmount > 0 && topHolders && topHolders.length > 0) {
+                    const topHolder = topHolders[0];
+                    if (topHolder.percentage) {
+                      // Estimate this wallet's percentage of total supply based on top holders
+                      // If top holder has P% and this wallet has amount A, estimate supply
+                      // This is rough but gives us a ballpark
+                      const calculatedPrice = tokenValue / tokenAmount;
+                      // Try to estimate supply: if top holder percentage is known, we can infer
+                      const estimatedSupply = topHolder.amount ? topHolder.amount / (topHolder.percentage / 100) : null;
+                      if (estimatedSupply && Number.isFinite(estimatedSupply) && estimatedSupply > 0) {
+                        const estimatedMarketCap = tokenMeta.usdPrice * estimatedSupply;
+                        return <div>Market Cap: ~${(estimatedMarketCap / 1_000_000).toFixed(2)}M (est.)</div>;
+                      }
+                    }
+                  }
+                }
+                
+                // Fallback: show price when market cap can't be calculated
                 if (tokenMeta.usdPrice) {
-                  return <div>Market Cap: Not available (Price: ${tokenMeta.usdPrice.toFixed(6)})</div>;
+                  return <div>Price: ${tokenMeta.usdPrice.toFixed(6)}</div>;
                 }
                 
                 return null;
