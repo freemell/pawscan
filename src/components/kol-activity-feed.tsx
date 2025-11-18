@@ -8,7 +8,7 @@ export function KolActivityFeed() {
   if (!alerts.length) {
     return (
       <div className="ascii-card border border-[var(--terminal-warn)] p-4 text-[var(--terminal-warn)]">
-        No live smart-trader activity yet. Add wallets from the tracker to kick off monitoring.
+        No live smart trader activity yet. Add wallets from the tracker to kick off monitoring.
       </div>
     );
   }

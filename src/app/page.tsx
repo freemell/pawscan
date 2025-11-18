@@ -9,7 +9,7 @@ export default function Home() {
       <p className="mb-4 text-xl">
         Welcome to <span className="text-[var(--terminal-accent)]">PawScan</span>, the purrr
         Solana terminal for stalking pretty smart traders and meme coin whisperers. Strap into the CRT cockpit, let the paw
-       guide you, and orchestrate copy-trade intel without leaving the retro grid.
+       guide you, and orchestrate copy trade intel without leaving the retro grid. you can also search up your wallet to know your rank among traders in solana
       </p>
       <div className="grid gap-4 md:grid-cols-2">
         <section className="ascii-card border border-[var(--terminal-accent)] p-3">
