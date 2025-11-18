@@ -6,8 +6,8 @@ import { useMemo } from "react";
 type Props = {
   portfolio: PortfolioToken[];
   swaps: MoralisSwap[];
-  tokenMeta?: { usdPrice?: number; marketCap?: number };
-  topHolders?: Array<{ address: string; percentage: number }>;
+  tokenMeta?: { usdPrice?: number; marketCap?: number; totalSupply?: number };
+  topHolders?: Array<{ address: string; percentage: number; amount?: number }>;
 };
 
 export function DyorPanel({ portfolio, swaps, tokenMeta, topHolders }: Props) {
@@ -78,11 +78,42 @@ export function DyorPanel({ portfolio, swaps, tokenMeta, topHolders }: Props) {
           <div className="border-t border-[var(--terminal-accent)]/30 pt-2">
             <div className="text-[var(--terminal-fg)] mb-1">Token Metrics</div>
             <div className="text-xs space-y-1 text-[var(--terminal-fg)]/70">
-              {tokenMeta.marketCap ? (
-                <div>Market Cap: ${(tokenMeta.marketCap / 1_000_000).toFixed(2)}M</div>
-              ) : tokenMeta.usdPrice ? (
-                <div>Market Cap: Not available</div>
-              ) : null}
+              {(() => {
+                // Use provided market cap if available
+                if (tokenMeta.marketCap) {
+                  return <div>Market Cap: ${(tokenMeta.marketCap / 1_000_000).toFixed(2)}M</div>;
+                }
+                
+                // Calculate market cap from price × supply if both available
+                if (tokenMeta.usdPrice && tokenMeta.totalSupply) {
+                  const calculatedMarketCap = tokenMeta.usdPrice * tokenMeta.totalSupply;
+                  return <div>Market Cap: ${(calculatedMarketCap / 1_000_000).toFixed(2)}M</div>;
+                }
+                
+                // Try to estimate from top holders if we have price and holder data
+                if (tokenMeta.usdPrice && topHolders && topHolders.length > 0) {
+                  const topHolder = topHolders[0];
+                  if (topHolder.percentage && topHolder.amount) {
+                    // Estimate total supply from top holder: supply = topHolderAmount / (percentage / 100)
+                    const estimatedSupply = topHolder.amount / (topHolder.percentage / 100);
+                    const estimatedMarketCap = tokenMeta.usdPrice * estimatedSupply;
+                    return <div>Market Cap: ~${(estimatedMarketCap / 1_000_000).toFixed(2)}M (est.)</div>;
+                  }
+                }
+                
+                // Try to calculate from portfolio token price if available
+                if (tokenMeta.usdPrice && topToken) {
+                  const tokenAmount = Number(topToken.amount ?? 0);
+                  const tokenValue = Number(topToken.value_usd ?? 0);
+                  
+                  // If we have both value and amount, we can verify the price
+                  // But we still need supply to calculate market cap
+                  // Without supply, we can't calculate accurately
+                  return null;
+                }
+                
+                return null;
+              })()}
             </div>
           </div>
         )}
