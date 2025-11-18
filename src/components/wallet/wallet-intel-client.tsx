@@ -205,7 +205,7 @@ export function WalletIntelClient({ address }: Props) {
       <CopyTradeCalculator swaps={swaps ?? []} />
       <MemeBadge swaps={swaps ?? []} tokenMeta={tokenMeta} />
       
-      {portfolio && portfolio.length > 0 && swaps.length > 0 && (
+      {portfolio && portfolio.length > 0 && (
         <DyorPanel
           portfolio={portfolio}
           swaps={swaps}

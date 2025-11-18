@@ -20,7 +20,7 @@ export function DyorPanel({ portfolio, swaps, tokenMeta, topHolders }: Props) {
     const concentration = totalValue > 0 ? (topTokenValue / totalValue) * 100 : 0;
 
     // Analyze swaps for this token
-    const tokenSwaps = swaps.filter(
+    const tokenSwaps = (swaps || []).filter(
       (s) => s.token_out.mint === topToken.mint || s.token_in.mint === topToken.mint,
     );
     const recentSwaps = tokenSwaps.filter((s) => {
@@ -42,7 +42,7 @@ export function DyorPanel({ portfolio, swaps, tokenMeta, topHolders }: Props) {
     if (top10Concentration > 60) risks.push("Top 10 holders control >60%");
     if ((tokenMeta?.marketCap ?? 0) < 1_000_000) risks.push("Low market cap (<$1M)");
     if ((tokenMeta?.marketCap ?? 0) < 100_000) risks.push("Micro cap (<$100K)");
-    if (recentSwaps.length === 0 && swaps.length > 0) risks.push("No recent activity (24h)");
+    if (recentSwaps.length === 0 && (swaps?.length ?? 0) > 0) risks.push("No recent activity (24h)");
 
     const positives: string[] = [];
     if (concentration < 30) positives.push("Diversified portfolio");
