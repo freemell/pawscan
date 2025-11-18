@@ -37,6 +37,20 @@ async function fetchJson<T>(url: string) {
       }
     }
     
+    // Handle 504 Gateway Timeout errors
+    if (response.status === 504) {
+      if (!errorMessage.includes("timeout") && !errorMessage.includes("504")) {
+        errorMessage = errorMessage || "Moralis API request timed out. Please retry in a few moments.";
+      }
+    }
+    
+    // Handle 404 Not Found errors
+    if (response.status === 404) {
+      if (!errorMessage.includes("not found") && !errorMessage.includes("404")) {
+        errorMessage = errorMessage || "Endpoint not available. This resource may not be supported.";
+      }
+    }
+    
     const error = new Error(errorMessage);
     (error as any).status = response.status;
     throw error;
