@@ -55,34 +55,58 @@ export async function moralisFetch<T>(
         .join("&")
     : "";
 
-  const response = await fetch(`${BASE_URL}${path}${query}`, {
-    headers: {
-      accept: "application/json",
-      "x-api-key": apiKey,
-    },
-    next: { revalidate: 300 }, // 5 minutes cache (aggressive for Free Tier)
-  });
+  // Add timeout and better error handling for Moralis API
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), 30000); // 30 second timeout
 
-  if (!response.ok) {
-    const body = await response.text();
-    console.error("Moralis error", response.status, body);
+  try {
+    const response = await fetch(`${BASE_URL}${path}${query}`, {
+      headers: {
+        accept: "application/json",
+        "x-api-key": apiKey,
+      },
+      signal: controller.signal,
+      next: { revalidate: 300 }, // 5 minutes cache (aggressive for Free Tier)
+    });
 
-    // Handle 429 Rate Limit errors specifically (from Moralis API)
-    if (response.status === 429) {
-      const retryAfter = response.headers.get("Retry-After");
-      throw new Error(
-        `RATE_LIMIT_429: Daily CU limit reached. ${retryAfter ? `Retry after ${retryAfter}s` : "Please try again later."}`,
-      );
+    clearTimeout(timeoutId);
+
+    if (!response.ok) {
+      const body = await response.text();
+      console.error("Moralis error", response.status, body);
+
+      // Handle 429 Rate Limit errors specifically (from Moralis API)
+      if (response.status === 429) {
+        const retryAfter = response.headers.get("Retry-After");
+        throw new Error(
+          `RATE_LIMIT_429: Daily CU limit reached. ${retryAfter ? `Retry after ${retryAfter}s` : "Please try again later."}`,
+        );
+      }
+
+      // Handle 502 Bad Gateway (temporary Moralis API issues)
+      if (response.status === 502) {
+        throw new Error("MORALIS_502: Moralis API temporarily unavailable. Please retry in a few moments.");
+      }
+
+      // Handle 504 Gateway Timeout
+      if (response.status === 504) {
+        throw new Error("MORALIS_504: Moralis API request timed out. Please retry in a few moments.");
+      }
+
+      throw new Error(body || "Moralis request failed");
     }
 
-    // Handle 502 Bad Gateway (temporary Moralis API issues)
-    if (response.status === 502) {
-      throw new Error("MORALIS_502: Moralis API temporarily unavailable. Please retry in a few moments.");
+    return (await response.json()) as T;
+  } catch (error: any) {
+    clearTimeout(timeoutId);
+    
+    // Handle timeout/abort errors
+    if (error.name === "AbortError" || error.message?.includes("timeout")) {
+      throw new Error("MORALIS_TIMEOUT: Moralis API request timed out after 30 seconds. Please retry.");
     }
-
-    throw new Error(body || "Moralis request failed");
+    
+    // Re-throw other errors
+    throw error;
   }
-
-  return (await response.json()) as T;
 }
 

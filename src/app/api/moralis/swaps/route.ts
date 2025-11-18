@@ -37,12 +37,21 @@ export async function GET(request: NextRequest) {
     console.error(`Trades fetch failed for ${address}`, error);
     // Don't try fallback if it's a rate limit error
     const isRateLimit = error.message?.includes("RATE_LIMIT");
+    const isTimeout = error.message?.includes("TIMEOUT") || error.message?.includes("timeout");
     if (isRateLimit) {
       return NextResponse.json(
         {
           message: error.message || "Daily API limit reached. Please try again tomorrow or upgrade your plan.",
         },
         { status: 429 },
+      );
+    }
+    if (isTimeout) {
+      return NextResponse.json(
+        {
+          message: "Moralis API request timed out. Please retry in a few moments.",
+        },
+        { status: 504 },
       );
     }
     try {
@@ -54,15 +63,18 @@ export async function GET(request: NextRequest) {
       console.error(`Transactions fallback failed for ${address}`, fallbackError);
       const isRateLimit = fallbackError.message?.includes("RATE_LIMIT");
       const is502 = fallbackError.message?.includes("MORALIS_502") || fallbackError.message?.includes("502");
+      const isTimeout = fallbackError.message?.includes("TIMEOUT") || fallbackError.message?.includes("timeout");
       return NextResponse.json(
         {
           message: isRateLimit
             ? fallbackError.message || "Daily API limit reached. Please try again tomorrow or upgrade your plan."
-            : is502
-              ? "Moralis API temporarily unavailable. Please retry in a few moments."
-              : "Swaps uplink unavailable. Please retry shortly.",
+            : isTimeout
+              ? "Moralis API request timed out. Please retry in a few moments."
+              : is502
+                ? "Moralis API temporarily unavailable. Please retry in a few moments."
+                : "Swaps uplink unavailable. Please retry shortly.",
         },
-        { status: isRateLimit ? 429 : is502 ? 502 : 502 },
+        { status: isRateLimit ? 429 : isTimeout ? 504 : is502 ? 502 : 502 },
       );
     }
   }
