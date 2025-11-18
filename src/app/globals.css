@@ -1,0 +1,58 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --terminal-bg: #000000;
+  --terminal-fg: #d7ffd7;
+  --terminal-accent: #00ff7f;
+  --terminal-warn: #ffde59;
+  --terminal-danger: #ff6b6b;
+}
+
+body {
+  min-height: 100vh;
+  background-color: var(--terminal-bg);
+  color: var(--terminal-fg);
+  font-family: var(--font-vt323, ui-monospace), "Courier New", monospace;
+  background-image:
+    radial-gradient(circle at 8px 8px, rgba(0, 255, 127, 0.12) 3px, transparent 0),
+    radial-gradient(circle at 40px 30px, rgba(255, 255, 255, 0.04) 6px, transparent 0);
+  background-size: 90px 90px;
+  cursor: url("/cat.svg") 16 16, auto;
+}
+
+.scanline-overlay {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  background: repeating-linear-gradient(
+    rgba(0, 255, 127, 0.05),
+    rgba(0, 255, 127, 0.05) 1px,
+    transparent 1px,
+    transparent 3px
+  );
+  mix-blend-mode: screen;
+  opacity: 0.3;
+  z-index: 10;
+}
+
+.ascii-card {
+  border: 2px solid var(--terminal-accent);
+  box-shadow: inset 0 0 20px rgba(0, 255, 127, 0.25);
+  background: rgba(0, 0, 0, 0.85);
+}
+
+.blink {
+  animation: blink 1s steps(2, start) infinite;
+}
+
+@keyframes blink {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0;
+  }
+}
