@@ -78,12 +78,11 @@ export function DyorPanel({ portfolio, swaps, tokenMeta, topHolders }: Props) {
           <div className="border-t border-[var(--terminal-accent)]/30 pt-2">
             <div className="text-[var(--terminal-fg)] mb-1">Token Metrics</div>
             <div className="text-xs space-y-1 text-[var(--terminal-fg)]/70">
-              {tokenMeta.marketCap && (
+              {tokenMeta.marketCap ? (
                 <div>Market Cap: ${(tokenMeta.marketCap / 1_000_000).toFixed(2)}M</div>
-              )}
-              {tokenMeta.usdPrice && (
-                <div>Price: ${tokenMeta.usdPrice.toFixed(6)}</div>
-              )}
+              ) : tokenMeta.usdPrice ? (
+                <div>Market Cap: Not available</div>
+              ) : null}
             </div>
           </div>
         )}
