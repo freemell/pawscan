@@ -57,10 +57,10 @@ export async function GET(request: NextRequest) {
     if (is422) {
       try {
         console.log(`Portfolio failed with 422 for ${address}, falling back to balances endpoint`);
-        const balancesData = await getCachedBalances(address);
+        const balancesData = await getCachedBalances(address) as Record<string, any>;
         // Transform balances data to match portfolio format if needed
         return NextResponse.json({
-          ...balancesData,
+          ...(balancesData || {}),
           _fallback: true,
           _message: "This wallet has too many tokens for full portfolio analysis. Showing token balances instead.",
         });
