@@ -41,7 +41,7 @@ export async function GET(request: NextRequest) {
     
     if (isMissingKey) {
       status = 500;
-      message = "Server configuration error. Please contact support.";
+      message = "Server configuration error: Missing API key. Please configure MORALIS_API_KEY in Vercel environment variables.";
     } else if (isRateLimit) {
       status = 429;
       message = PAW_SERVER_ERROR;
