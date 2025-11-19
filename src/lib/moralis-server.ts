@@ -65,6 +65,17 @@ export async function moralisFetch<T>(
         throw new Error("MORALIS_504: Moralis API request timed out. Please retry in a few moments.");
       }
 
+      // Handle 422 Unprocessable Entity (e.g., "Wallet has too many tokens")
+      if (response.status === 422) {
+        let errorBody: any = {};
+        try {
+          errorBody = JSON.parse(body);
+        } catch {
+          // Not JSON, use body as-is
+        }
+        throw new Error(`MORALIS_422: ${errorBody.message || body || "Unprocessable Entity"}`);
+      }
+
       throw new Error(body || "Moralis request failed");
     }
 

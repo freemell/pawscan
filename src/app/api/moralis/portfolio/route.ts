@@ -17,6 +17,20 @@ const getCachedPortfolio = unstable_cache(
   },
 );
 
+// Fallback to balances endpoint when portfolio fails with 422 (too many tokens)
+const getCachedBalances = unstable_cache(
+  async (address: string) => {
+    return await moralisFetch(`/account/mainnet/${address}/tokens`, {
+      limit: 50,
+    });
+  },
+  ["balances"],
+  {
+    revalidate: 300, // 5 minutes cache
+    tags: ["balances"],
+  },
+);
+
 export async function GET(request: NextRequest) {
   const address = request.nextUrl.searchParams.get("address");
   if (!address) {
@@ -36,7 +50,25 @@ export async function GET(request: NextRequest) {
     const is502 = errorMsg.includes("MORALIS_502") || errorMsg.includes("502");
     const isTimeout = errorMsg.includes("TIMEOUT") || errorMsg.includes("timeout");
     const is404 = errorMsg.includes("404") || errorMsg.includes("not found");
+    const is422 = errorMsg.includes("MORALIS_422") || errorMsg.includes("422") || errorMsg.includes("too many tokens");
     const isMissingKey = errorMsg.includes("MORALIS_API_KEY") || errorMsg.includes("Missing");
+    
+    // If wallet has too many tokens, fallback to balances endpoint
+    if (is422) {
+      try {
+        console.log(`Portfolio failed with 422 for ${address}, falling back to balances endpoint`);
+        const balancesData = await getCachedBalances(address);
+        // Transform balances data to match portfolio format if needed
+        return NextResponse.json({
+          ...balancesData,
+          _fallback: true,
+          _message: "This wallet has too many tokens for full portfolio analysis. Showing token balances instead.",
+        });
+      } catch (fallbackError: any) {
+        console.error("Balances fallback also failed", fallbackError);
+        // Continue to error handling below
+      }
+    }
     
     let status = 502;
     let message = "Portfolio uplink unavailable. Please retry shortly.";
@@ -53,6 +85,9 @@ export async function GET(request: NextRequest) {
     } else if (is404) {
       status = 404;
       message = "Portfolio endpoint not available. This wallet may not be supported.";
+    } else if (is422) {
+      status = 422;
+      message = "This wallet has too many tokens for portfolio analysis. Please try a different wallet or use token balances instead.";
     } else if (is502) {
       status = 502;
       message = "Moralis API temporarily unavailable. Please retry in a few moments.";
