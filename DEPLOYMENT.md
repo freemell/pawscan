@@ -42,3 +42,4 @@ After redeploying, check the Vercel function logs:
 
 If you see that error, the environment variable is still not set correctly.
 
+

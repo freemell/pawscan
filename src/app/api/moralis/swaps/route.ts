@@ -5,6 +5,9 @@ import { moralisFetch } from "@/lib/moralis-server";
 import type { MoralisSwap } from "@/lib/types";
 import { PAW_SERVER_ERROR } from "@/lib/messages";
 
+// Note: Map-based cache doesn't persist in serverless (Vercel), but this is acceptable
+// for swaps since they change frequently. The fetch-level cache (next: { revalidate })
+// in moralisFetch will help reduce actual API calls.
 const CACHE_TTL = 3 * 60 * 1000; // 3 minutes (aggressive caching for Free Tier)
 const swapCache = new Map<string, { expires: number; payload: { result: MoralisSwap[]; isFallback: boolean } }>();
 const SWAP_PROGRAM_IDS = new Set([

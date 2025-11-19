@@ -34,7 +34,7 @@ export default function Home() {
             only see the glam glow.
           </p>
           <p className="text-base text-[var(--terminal-warn)]">
-            Keep an eye on the activity feed for fresh meme buys; paw badges flare whenever a low-cap
+            Keep an eye on the activity feed for fresh meme buys; paw badges flare whenever a low cap
             token sneaks into the stack.
           </p>
         </section>

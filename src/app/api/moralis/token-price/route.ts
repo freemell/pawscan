@@ -1,9 +1,19 @@
 import { NextRequest, NextResponse } from "next/server";
+import { unstable_cache } from "next/cache";
 import { moralisFetch } from "@/lib/moralis-server";
 import { PAW_SERVER_ERROR } from "@/lib/messages";
 
-const CACHE = new Map<string, { timestamp: number; data: any }>();
-const CACHE_TTL = 2 * 60 * 1000; // 2 minutes (prices change frequently but not every second)
+// Use Next.js cache for serverless compatibility (persists across function invocations)
+const getCachedTokenPrice = unstable_cache(
+  async (mint: string) => {
+    return await moralisFetch(`/token/mainnet/${mint}/price`);
+  },
+  ["token-price"],
+  {
+    revalidate: 120, // 2 minutes cache (prices change frequently but not every second)
+    tags: ["token-price"],
+  },
+);
 
 export async function GET(request: NextRequest) {
   const mint = request.nextUrl.searchParams.get("mint");
@@ -14,16 +24,8 @@ export async function GET(request: NextRequest) {
     );
   }
 
-  // Check cache first
-  const cacheKey = `price-${mint}`;
-  const cached = CACHE.get(cacheKey);
-  if (cached && Date.now() - cached.timestamp < CACHE_TTL) {
-    return NextResponse.json(cached.data);
-  }
-
   try {
-    const data = await moralisFetch(`/token/mainnet/${mint}/price`);
-    CACHE.set(cacheKey, { timestamp: Date.now(), data });
+    const data = await getCachedTokenPrice(mint);
     return NextResponse.json(data);
   } catch (error: any) {
     console.error("Token price fetch failed", error);

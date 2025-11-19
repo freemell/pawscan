@@ -1,9 +1,21 @@
 import { NextRequest, NextResponse } from "next/server";
+import { unstable_cache } from "next/cache";
 import { moralisFetch } from "@/lib/moralis-server";
 import { PAW_SERVER_ERROR } from "@/lib/messages";
 
-const CACHE = new Map<string, { timestamp: number; data: any }>();
-const CACHE_TTL = 5 * 60 * 1000; // 5 minutes
+// Use Next.js cache for serverless compatibility (persists across function invocations)
+const getCachedBalances = unstable_cache(
+  async (address: string) => {
+    return await moralisFetch(`/account/mainnet/${address}/tokens`, {
+      limit: 50, // Reduced from 200 for Free Tier
+    });
+  },
+  ["balances"],
+  {
+    revalidate: 300, // 5 minutes cache
+    tags: ["balances"],
+  },
+);
 
 export async function GET(request: NextRequest) {
   const address = request.nextUrl.searchParams.get("address");
@@ -14,18 +26,8 @@ export async function GET(request: NextRequest) {
     );
   }
 
-  // Check cache first
-  const cacheKey = `balances-${address}`;
-  const cached = CACHE.get(cacheKey);
-  if (cached && Date.now() - cached.timestamp < CACHE_TTL) {
-    return NextResponse.json(cached.data);
-  }
-
   try {
-    const data = await moralisFetch(`/account/mainnet/${address}/tokens`, {
-      limit: 50, // Reduced from 200 for Free Tier
-    });
-    CACHE.set(cacheKey, { timestamp: Date.now(), data });
+    const data = await getCachedBalances(address);
     return NextResponse.json(data);
   } catch (error: any) {
     console.error("Token balances fetch failed", error);

@@ -1,9 +1,21 @@
 import { NextRequest, NextResponse } from "next/server";
+import { unstable_cache } from "next/cache";
 import { moralisFetch } from "@/lib/moralis-server";
 import { PAW_SERVER_ERROR } from "@/lib/messages";
 
-const CACHE = new Map<string, { timestamp: number; data: any }>();
-const CACHE_TTL = 10 * 60 * 1000; // 10 minutes (top holders change slowly)
+// Use Next.js cache for serverless compatibility (persists across function invocations)
+const getCachedTopHolders = unstable_cache(
+  async (mint: string) => {
+    return await moralisFetch(`/token/mainnet/${mint}/holders`, {
+      limit: 25,
+    });
+  },
+  ["top-holders"],
+  {
+    revalidate: 600, // 10 minutes cache (top holders change slowly)
+    tags: ["top-holders"],
+  },
+);
 
 export async function GET(request: NextRequest) {
   const mint = request.nextUrl.searchParams.get("mint");
@@ -14,18 +26,8 @@ export async function GET(request: NextRequest) {
     );
   }
 
-  // Check cache first
-  const cacheKey = `holders-${mint}`;
-  const cached = CACHE.get(cacheKey);
-  if (cached && Date.now() - cached.timestamp < CACHE_TTL) {
-    return NextResponse.json(cached.data);
-  }
-
   try {
-    const data = await moralisFetch(`/token/mainnet/${mint}/holders`, {
-      limit: 25,
-    });
-    CACHE.set(cacheKey, { timestamp: Date.now(), data });
+    const data = await getCachedTopHolders(mint);
     return NextResponse.json(data);
   } catch (error: any) {
     console.error("Top holders fetch failed", error);

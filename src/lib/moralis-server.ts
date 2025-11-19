@@ -1,10 +1,10 @@
 const BASE_URL = "https://solana-gateway.moralis.io";
 
-// Free Tier: 40K CUs/day = ~1,667 CUs/hour = ~28 CUs/minute
-// Conservative estimate: ~100-500 CUs per request
-// Safe rate: ~5-10 requests/minute max
-const RATE_LIMIT_CACHE = new Map<string, number[]>();
-const MAX_REQUESTS_PER_MINUTE = 8; // Conservative limit for Free Tier
+// Note: In-memory rate limiting doesn't work in serverless (Vercel) because each
+// function invocation is a separate instance. We rely on:
+// 1. Next.js fetch cache (next: { revalidate })
+// 2. Server-side caching with unstable_cache in API routes
+// 3. Moralis API's own rate limiting (returns 429 when exceeded)
 
 function ensureApiKey() {
   const key = process.env.MORALIS_API_KEY;
@@ -14,38 +14,10 @@ function ensureApiKey() {
   return key;
 }
 
-function checkRateLimit(): { allowed: boolean; retryAfter?: number } {
-  const now = Date.now();
-  const windowStart = now - 60_000; // 1 minute window
-  const key = "global";
-
-  const requests = RATE_LIMIT_CACHE.get(key) ?? [];
-  const recentRequests = requests.filter((timestamp) => timestamp > windowStart);
-
-  if (recentRequests.length >= MAX_REQUESTS_PER_MINUTE) {
-    // Calculate when the next request will be allowed
-    const oldestRequest = Math.min(...recentRequests);
-    const retryAfter = Math.ceil((60000 - (now - oldestRequest)) / 1000);
-    return { allowed: false, retryAfter: Math.max(1, retryAfter) };
-  }
-
-  recentRequests.push(now);
-  RATE_LIMIT_CACHE.set(key, recentRequests);
-  return { allowed: true };
-}
-
 export async function moralisFetch<T>(
   path: string,
   search?: Record<string, string | number | undefined>,
 ): Promise<T> {
-  // Check rate limit before making request
-  const rateLimitCheck = checkRateLimit();
-  if (!rateLimitCheck.allowed) {
-    throw new Error(
-      `RATE_LIMIT_EXCEEDED: Too many requests. Please wait ${rateLimitCheck.retryAfter}s before trying again.`,
-    );
-  }
-
   const apiKey = ensureApiKey();
   const query = search
     ? "?" +
@@ -66,7 +38,7 @@ export async function moralisFetch<T>(
         "x-api-key": apiKey,
       },
       signal: controller.signal,
-      next: { revalidate: 300 }, // 5 minutes cache (aggressive for Free Tier)
+      next: { revalidate: 600 }, // 10 minutes cache (aggressive for Free Tier & serverless)
     });
 
     clearTimeout(timeoutId);

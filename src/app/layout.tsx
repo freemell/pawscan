@@ -11,9 +11,9 @@ const vt323 = VT323({
 });
 
 export const metadata: Metadata = {
-  title: "PawScan — Smart Trader Terminal",
+  title: "PawScan Smart Trader Pawminal",
   description:
-    "Track Solana smart-trader wallets, meme trades, and portfolio in Pawfect style.",
+    "Track Solana smart trader wallets, meme trades, and portfolio in Pawfect style tehee",
   icons: {
     icon: "/cat.svg",
     shortcut: "/cat.svg",
