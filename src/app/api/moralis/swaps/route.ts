@@ -3,6 +3,7 @@ import pRetry from "p-retry";
 
 import { moralisFetch } from "@/lib/moralis-server";
 import type { MoralisSwap } from "@/lib/types";
+import { PAW_SERVER_ERROR } from "@/lib/messages";
 
 const CACHE_TTL = 3 * 60 * 1000; // 3 minutes (aggressive caching for Free Tier)
 const swapCache = new Map<string, { expires: number; payload: { result: MoralisSwap[]; isFallback: boolean } }>();
@@ -41,7 +42,7 @@ export async function GET(request: NextRequest) {
     if (isRateLimit) {
       return NextResponse.json(
         {
-          message: error.message || "Daily API limit reached. Please try again tomorrow or upgrade your plan.",
+          message: PAW_SERVER_ERROR,
         },
         { status: 429 },
       );
@@ -67,7 +68,7 @@ export async function GET(request: NextRequest) {
       return NextResponse.json(
         {
           message: isRateLimit
-            ? fallbackError.message || "Daily API limit reached. Please try again tomorrow or upgrade your plan."
+            ? PAW_SERVER_ERROR
             : isTimeout
               ? "Moralis API request timed out. Please retry in a few moments."
               : is502

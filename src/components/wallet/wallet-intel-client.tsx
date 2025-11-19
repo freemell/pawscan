@@ -3,6 +3,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { getPortfolio, getSwaps, getTokenTopHolders, getTokenPrice } from "@/lib/moralis-client";
 import { PortfolioToken, MoralisSwap } from "@/lib/types";
+import { PAW_SERVER_ERROR } from "@/lib/messages";
 import { ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Tooltip, LineChart, Line } from "recharts";
 import { motion } from "framer-motion";
 import { useKolStore } from "@/lib/state/kol-store";
@@ -92,7 +93,7 @@ export function WalletIntelClient({ address }: Props) {
                 {(() => {
                   const msg = portfolioError.message?.toLowerCase() || "";
                   if (msg.includes("429") || msg.includes("limit") || msg.includes("rate_limit")) {
-                    return "Daily API limit reached. Please try again tomorrow or upgrade your plan.";
+                    return PAW_SERVER_ERROR;
                   }
                   if (msg.includes("504") || msg.includes("timeout")) {
                     return "Moralis API request timed out. Please retry in a few moments.";
@@ -112,7 +113,7 @@ export function WalletIntelClient({ address }: Props) {
                 {(() => {
                   const msg = swapsError.message?.toLowerCase() || "";
                   if (msg.includes("429") || msg.includes("limit") || msg.includes("rate_limit")) {
-                    return "Daily API limit reached. Please try again tomorrow or upgrade your plan.";
+                    return PAW_SERVER_ERROR;
                   }
                   if (msg.includes("504") || msg.includes("timeout")) {
                     return "Moralis API request timed out. Please retry in a few moments.";

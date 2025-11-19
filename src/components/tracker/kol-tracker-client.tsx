@@ -6,6 +6,7 @@ import { loadKolCsv } from "@/lib/csv";
 import { useKolStore } from "@/lib/state/kol-store";
 import Link from "next/link";
 import { getSwaps } from "@/lib/moralis-client";
+import { PAW_SERVER_ERROR } from "@/lib/messages";
 import { motion } from "framer-motion";
 import { Monitor, RefreshCw } from "lucide-react";
 import { WalletFilters } from "./wallet-filters";
@@ -92,14 +93,7 @@ export function KolTrackerClient() {
         normalizedMsg.includes("limit reached") ||
         normalizedMsg.includes("daily limit")
       ) {
-        if (normalizedMsg.includes("wait")) {
-          // Extract wait time if available
-          const waitMatch = errorMsg.match(/wait (\d+)/i);
-          const waitTime = waitMatch ? waitMatch[1] : "a few";
-          setStatus(`Rate limit reached. Please wait ${waitTime} seconds before trying again.`);
-        } else {
-          setStatus("Daily API limit reached. Please try again tomorrow or upgrade your plan.");
-        }
+        setStatus(PAW_SERVER_ERROR);
       } else if (
         normalizedMsg.includes("502") ||
         normalizedMsg.includes("unavailable") ||

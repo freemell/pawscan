@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { moralisFetch } from "@/lib/moralis-server";
+import { PAW_SERVER_ERROR } from "@/lib/messages";
 
 const CACHE = new Map<string, { timestamp: number; data: any }>();
 const CACHE_TTL = 5 * 60 * 1000; // 5 minutes (aggressive caching for Free Tier)
@@ -43,7 +44,7 @@ export async function GET(request: NextRequest) {
       message = "Server configuration error. Please contact support.";
     } else if (isRateLimit) {
       status = 429;
-      message = errorMsg || "Daily API limit reached. Please try again tomorrow or upgrade your plan.";
+      message = PAW_SERVER_ERROR;
     } else if (isTimeout) {
       status = 504;
       message = "Moralis API request timed out. Please retry in a few moments.";

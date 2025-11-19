@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { moralisFetch } from "@/lib/moralis-server";
+import { PAW_SERVER_ERROR } from "@/lib/messages";
 
 const CACHE = new Map<string, { timestamp: number; data: any }>();
 const CACHE_TTL = 10 * 60 * 1000; // 10 minutes (top holders change slowly)
@@ -33,7 +34,7 @@ export async function GET(request: NextRequest) {
     return NextResponse.json(
       {
         message: isRateLimit
-          ? error.message || "Daily API limit reached. Please try again tomorrow or upgrade your plan."
+          ? PAW_SERVER_ERROR
           : is502
             ? "Moralis API temporarily unavailable. Please retry in a few moments."
             : "Top-holder uplink unavailable. Please retry shortly.",

@@ -1,6 +1,7 @@
 "use client";
 
 import type { MoralisSwap, PortfolioToken } from "./types";
+import { PAW_SERVER_ERROR } from "./messages";
 
 type SwapsResponse = {
   swaps: MoralisSwap[];
@@ -25,9 +26,7 @@ async function fetchJson<T>(url: string) {
     
     // Handle 429 rate limit errors specifically
     if (response.status === 429) {
-      if (!errorMessage.includes("limit") && !errorMessage.includes("429")) {
-        errorMessage = errorMessage || "Daily API limit reached. Please try again tomorrow or upgrade your plan.";
-      }
+      errorMessage = PAW_SERVER_ERROR;
     }
     
     // Handle 502 Bad Gateway errors
