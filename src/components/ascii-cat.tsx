@@ -7,7 +7,7 @@ const CAT_FRAMES = [
 ( ̳• · • ̳)
 /    づ♡  scanning...
 pussys and boots
-CLAWED`,
+ca: HMx7Pnntedmu4n8UsDv8Y43AMUemynac5LjfCzDUpump`,
   `∧,,,∧
 ( ̳• · • ̳)
 /    づ♡  syncing...
